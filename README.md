@@ -34,7 +34,7 @@ archive/standardized_384 ─autolabel─► data/autolabels.json ─split─► 
 ```
 
 `dvc.yaml` wires the stages together, and `params.yaml` holds every knob. `dvc repro` reruns only the stages whose code, data, or params changed.
-For example, changing `train.*` retrains the model without redoing the 30-minute auto-labeling.
+For example, changing `train.*` retrains the model without redoing the ~1 hour auto-labeling.
 
 ## Where each detection concept lives
 

@@ -68,7 +68,7 @@ Go to **Add-ons → Secrets**, add the ones you want, and tick "attach to this n
 
 | Secret | What it enables |
 |---|---|
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | DVC push/pull to your S3 remote. Results survive the session, and later runs skip stages that already ran, such as the 30-min auto-labeling. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | DVC push/pull to your S3 remote. Results survive the session, and later runs skip stages that already ran, such as the ~1 h auto-labeling. |
 | `MLFLOW_TRACKING_URI`, `MLFLOW_TRACKING_USERNAME`, `MLFLOW_TRACKING_PASSWORD` | Live MLflow tracking on a server (DagsHub gives one free) instead of a local `mlruns/` folder. |
 
 Without secrets everything still works. You just download results as a zip at the end.
@@ -91,7 +91,7 @@ Got an error? Check Troubleshooting below, or copy the traceback and ask.
 ## Step 6: The real training run
 
 1. Set `SMOKE_TEST = False`.
-2. Adjust `train.epochs` in `params.yaml` if needed. Rough budget: 30 min of auto-labeling + (seconds per epoch × epochs) must fit comfortably under 12 hours. Early stopping (`patience`) usually ends training sooner anyway.
+2. Adjust `train.epochs` in `params.yaml` if needed. Rough budget: ~1 h of auto-labeling (measured: ~0.3 s per image on a T4) + (seconds per epoch × epochs) must fit comfortably under 12 hours. Early stopping (`patience`) usually ends training sooner anyway.
 3. Click **Save Version → Save & Run All (Commit)**.
    This runs in the background. You can close the browser or even your laptop.
 4. Follow progress in **View Active Events** (bottom left), or open the running version's log.
@@ -123,7 +123,7 @@ Test the model locally: `uvicorn app.main:app` and open http://localhost:8000/do
 2. On Kaggle, open the notebook → **Edit** → Save & Run All again.
 3. Compare runs with `dvc metrics diff` or in MLflow.
 
-With S3 secrets set, changing only `train.*` skips the 30-min auto-labeling, because DVC restores it from the run-cache.
+With S3 secrets set, changing only `train.*` skips the ~1 h auto-labeling, because DVC restores it from the run-cache.
 
 ---
 

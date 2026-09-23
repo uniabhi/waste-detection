@@ -35,7 +35,7 @@ for cls_id, (cls, prompts) in enumerate(P["classes"].items()):
     files = sorted(f for f in (IMAGES / cls).iterdir() if f.suffix.lower() in {".jpg", ".jpeg", ".png"})
     files = files[: A["limit_per_class"] or None]
     n_labeled = n_boxes = 0
-    # ponytail: batch size 1 (~25 min for 12k imgs on a T4, runs once, DVC caches it); batch if it grows
+    # ponytail: batch size 1 (~1 h for 12k imgs on a T4, runs once, DVC caches it); batch images to speed up
     for f in tqdm(files, desc=cls):
         img = Image.open(f).convert("RGB")
         w, h = img.size

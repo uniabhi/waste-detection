@@ -91,7 +91,12 @@ with mlflow.start_run():
 
     # --- COCO evaluation on the test split: mAP@[.5:.95], mAP@.5, per-class AP ---
     gt = COCO(str(COCO_DIR / "test.json"))
-    images = dataset("test").map(lambda img, y: img)
+    # KerasHub's NMS layer needs a static batch size: pad the test set with blank images up to a
+    # whole number of batches, drop_remainder, and ignore the padding's predictions (zip below)
+    n_test, B = len(gt.getImgIds()), T["batch_size"]
+    images = (dataset("test").unbatch().map(lambda img, y: img)
+              .concatenate(tf.data.Dataset.from_tensors(tf.zeros([SIZE, SIZE, 3])).repeat(-n_test % B))
+              .batch(B, drop_remainder=True))
     pred = model.predict(images)  # preprocess -> network -> decode anchors -> NMS
     dets = []
     for img_id, boxes, scores, labels, n in zip(gt.getImgIds(), pred["boxes"], pred["confidence"],
@@ -127,7 +132,8 @@ with mlflow.start_run():
         x = model.preprocessor(images)
         return model.decode_predictions(model(x, training=False), x)
 
-    export.add_endpoint("serve", serve, input_signature=[tf.TensorSpec([None, SIZE, SIZE, 3], tf.float32)])
+    # batch fixed at 1 (NMS needs a static batch; the API sends one image per request)
+    export.add_endpoint("serve", serve, input_signature=[tf.TensorSpec([1, SIZE, SIZE, 3], tf.float32)])
     export.write_out(str(MODELS / "serving"))
     (MODELS / "serving" / "meta.json").write_text(json.dumps({"classes": CLASSES, "image_size": SIZE}))
     mlflow.log_artifacts(str(MODELS / "serving"), "serving")
