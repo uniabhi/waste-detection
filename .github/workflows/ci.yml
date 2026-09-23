@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements-serve.txt pytest httpx ruff
+      - run: ruff check app src tests
+      - run: python -m pytest -q  # endpoint test skips here: the model lives in DVC, not git
+
+  # main branch only, and only once you've set the repo variables/secrets below
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && vars.ECR_REPOSITORY != ''
+    runs-on: ubuntu-latest
+    permissions: {id-token: write, contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: pip install "dvc[s3]" -r requirements-serve.txt pytest httpx
+      # dvc.lock (in git) pins the exact model hash -> this pulls THAT SavedModel from S3
+      - run: dvc pull models/serving
+      - run: python -m pytest -q  # now the endpoint test runs against the real model
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          aws eks update-kubeconfig --name "${{ vars.EKS_CLUSTER }}"
+          kubectl apply -f k8s/deployment.yaml
+          kubectl set image deployment/waste-detector api="$IMAGE"
+          kubectl rollout status deployment/waste-detector --timeout=180s
