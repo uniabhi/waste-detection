@@ -5,3 +5,4 @@ pycocotools
 transformers   # Grounding DINO for auto-labeling only
 dvc[s3]
 mlflow
+pyopenssl>=26.4  # Kaggle ships pyopenssl 24 (needs cryptography<44); dvc/mlflow upgrade cryptography, which breaks `import tensorflow`
