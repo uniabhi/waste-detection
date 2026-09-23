@@ -3,6 +3,6 @@
 keras-hub
 pycocotools
 transformers   # Grounding DINO for auto-labeling only
-dvc[s3]
+dvc            # S3 plugin is installed by the notebook only when AWS secrets exist (it downgrades botocore)
 mlflow
 pyopenssl>=26.4  # Kaggle ships pyopenssl 24 (needs cryptography<44); dvc/mlflow upgrade cryptography, which breaks `import tensorflow`
