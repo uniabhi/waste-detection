@@ -58,7 +58,9 @@ If your dataset is already public on Kaggle, skip this and attach the public one
    - **Internet:** `On` (needed for `pip install`, `git clone`, and downloading pretrained weights)
 3. Click **Add Input**, search **Your Datasets**, and add the dataset from Step 2.
    It appears under `/kaggle/input/...`, and the notebook finds the `standardized_384` folder automatically.
-4. In the first code cell, set `REPO` to your GitHub URL.
+4. Click **Add Input** again, switch to **Models**, search `retinanet`, and add **Keras / retinanet_resnet50_fpn_coco** (version 4).
+   These are the pretrained weights the training starts from. Kaggle only downloads models that are attached to the notebook, so a background run ("Save & Run All") fails without this.
+5. In the first code cell, check that `REPO` is your GitHub URL.
 
 ## Step 4 (optional): Secrets for remote storage and tracking
 
@@ -134,6 +136,7 @@ With S3 secrets set, changing only `train.*` skips the 30-min auto-labeling, bec
 | `cp: cannot stat ''` in the data cell | Dataset not attached (Add Input), or the folder inside isn't named `standardized_384`. |
 | `ResourceExhaustedError` / OOM | Lower `train.batch_size` in `params.yaml` to 8. |
 | Error mentioning `MirroredStrategy` / NCCL / multi-GPU | Train on one GPU: add `import os; os.environ["CUDA_VISIBLE_DEVICES"] = "0"` at the very top of the first cell. |
+| `New Models cannot be attached in non-interactive sessions` | The RetinaNet model isn't attached. Do step 3.4. |
 | `AssertionError: ... expected 384x384` in split | An image isn't 384×384. Use `standardized_384`, not `original`. |
 | Run hit the 12 h limit | A timed-out run may not keep its outputs. Size `epochs` from the smoke test's time per epoch, with margin. |
 | Quota running low | Develop with `SMOKE_TEST = True`, and do full runs only when something actually changed. |
