@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waste-detector
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: waste-detector}
+  template:
+    metadata:
+      labels: {app: waste-detector}
+    spec:
+      containers:
+        - name: api
+          image: waste-detector:latest  # CI replaces this with <ecr-registry>/<repo>:<git-sha>
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8000}]
+          resources:
+            requests: {cpu: 500m, memory: 1Gi}
+            limits: {cpu: "2", memory: 2Gi}  # TF runtime + ResNet50 RetinaNet
+          readinessProbe:  # no traffic until the model is loaded
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: waste-detector
+spec:
+  selector: {app: waste-detector}
+  ports: [{port: 80, targetPort: 8000}]

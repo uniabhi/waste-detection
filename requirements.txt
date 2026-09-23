@@ -1,0 +1,7 @@
+# training. Kaggle already has tensorflow, torch (CUDA), opencv + matplotlib (used by keras.visualization);
+# elsewhere also install: tensorflow torch torchvision opencv-python-headless matplotlib
+keras-hub
+pycocotools
+transformers   # Grounding DINO for auto-labeling only
+dvc[s3]
+mlflow

@@ -1,0 +1,5 @@
+# allowlist: without this the 1.2 GB archive/ is sent as build context
+*
+!app/
+!models/serving/
+!requirements-serve.txt

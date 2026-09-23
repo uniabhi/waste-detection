@@ -1,0 +1,18 @@
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# dataset: tracked by DVC (`dvc add archive/standardized_384`), only the .dvc pointer goes to git
+archive/*
+!archive/*.dvc
+# training byproducts (DVC adds its own outputs to .gitignore automatically)
+mlflow.db
+mlruns/
+__pycache__/
+# local AI-tool configs (graft index, editor agents), not project code
+.claude/
+.cursor/
+.gemini/
+.mcp.json
+.ignore
+AGENTS.md
+GEMINI.md

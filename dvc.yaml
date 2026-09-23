@@ -1,0 +1,46 @@
+stages:
+  autolabel:
+    cmd: python src/autolabel.py
+    deps:
+      - src/autolabel.py
+      - ${data.images_dir}
+    params:
+      - classes
+      - autolabel
+    outs:
+      - data/autolabels.json
+      - reports/autolabel_rejected.txt:
+          cache: false
+    metrics:
+      - reports/autolabel.json:
+          cache: false
+
+  split:
+    cmd: python src/split.py
+    deps:
+      - src/split.py
+      - data/autolabels.json
+      - ${data.images_dir}
+    params:
+      - classes
+      - split
+      - data.image_size
+    outs:
+      - data/coco
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/coco
+      - ${data.images_dir}
+    params:
+      - train
+      - data.image_size
+      - autolabel.max_boxes
+    outs:
+      - models/detector.keras
+      - models/serving
+    metrics:
+      - reports/metrics.json:
+          cache: false

@@ -1,0 +1,39 @@
+# Single source of truth for every knob. DVC tracks these: change one -> `dvc repro`
+# re-runs only the stages that depend on it.
+
+data:
+  images_dir: archive/standardized_384   # one folder per class
+  image_size: 384                         # images_dir is already letterboxed to this square size
+
+# class folder -> text prompts Grounding DINO searches for. Order = class id (0-based in Keras, +1 in COCO JSON).
+classes:
+  battery: [battery]
+  biological: [food, fruit, vegetable]
+  cardboard: [cardboard box, cardboard]
+  clothes: [clothes, shirt, pants, jacket]
+  glass: [glass bottle, glass jar, glass]
+  metal: [metal can, can, metal object]
+  paper: [paper, newspaper, paper bag]
+  plastic: [plastic bottle, plastic bag, plastic container]
+  shoes: [shoe]
+  trash: [trash, garbage, face mask, wrapper]
+
+autolabel:
+  model: IDEA-Research/grounding-dino-tiny
+  box_threshold: 0.35     # min box confidence; lower = more boxes, more junk
+  text_threshold: 0.25
+  nms_iou: 0.5
+  max_boxes: 5            # per image; also the padded box count per image in training
+  limit_per_class: 0      # >0 = only first N images per class (smoke tests)
+
+split:
+  val: 0.1
+  test: 0.1
+  seed: 42
+
+train:
+  preset: retinanet_resnet50_fpn_coco  # KerasHub: ResNet50 + FPN pretrained on COCO; new heads for our 10 classes
+  epochs: 30
+  batch_size: 16          # global batch, split across GPUs by MirroredStrategy (Kaggle T4 x2 -> 8 each)
+  learning_rate: 0.0001   # small: we're fine-tuning pretrained weights, not training from scratch
+  patience: 5             # early stop when val_loss hasn't improved for this many epochs
